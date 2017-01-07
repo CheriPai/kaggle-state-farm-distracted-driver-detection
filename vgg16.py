@@ -9,8 +9,8 @@ class VGG16():
     weights_path = "data/vgg16_bn.h5"
     model = None
 
-    def __init__(self):
-        self.build()
+    def __init__(self, dropout=0.3):
+        self.build(dropout)
 
     def vgg_preprocess(self, x):
         vgg_mean = np.array([123.68, 116.779, 103.939]).reshape((3, 1, 1))
@@ -28,9 +28,9 @@ class VGG16():
         self.model.add(Dropout(dropout))
         self.model.add(BatchNormalization())
 
-    def build(self, dropout=0.3):
+    def build(self, dropout):
         self.model = Sequential()
-        self.model.add(Lambda(self.vgg_preprocess, input_shape=(3, 244, 244)))
+        self.model.add(Lambda(self.vgg_preprocess, input_shape=(3, 224, 224)))
 
         self.conv_block(2, 64)
         self.conv_block(2, 128)
@@ -43,6 +43,21 @@ class VGG16():
         self.fc_block(dropout)
         self.model.add(Dense(1000, activation="softmax"))
         self.model.load_weights(self.weights_path)
+
+        last_conv_idx = [idx for idx, layer in enumerate(self.model.layers) if type(layer) is Convolution2D][-1]
+        for layer in self.model.layers[last_conv_idx+1:]:
+            layer.set_weights(self.scale_weights(layer, 0.3, dropout))
+
+    def finetune(self, num_outputs):
+        self.model.pop()
+        # TODO: Provide parameter to trainable layers
+        for layer in self.model.layers:
+            layer.trainable = False
+        self.model.add(Dense(num_outputs, activation="softmax"))
+
+    def scale_weights(self, layer, prev_p, new_p):
+        scal = (1 - prev_p) / (1 - new_p)
+        return [o * scal for o in layer.get_weights()]
 
 
 if __name__ == "__main__":
