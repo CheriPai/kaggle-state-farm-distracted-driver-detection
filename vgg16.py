@@ -48,10 +48,16 @@ class VGG16():
         for layer in self.model.layers[last_conv_idx+1:]:
             layer.set_weights(self.scale_weights(layer, 0.3, dropout))
 
-    def finetune(self, num_outputs):
+    def finetune_last(self, num_outputs):
         self.model.pop()
-        # TODO: Provide parameter to trainable layers
         for layer in self.model.layers:
+            layer.trainable = False
+        self.model.add(Dense(num_outputs, activation="softmax"))
+
+    def finetune_dense(self, num_outputs):
+        self.model.pop()
+        last_conv_idx = [idx for idx, layer in enumerate(self.model.layers) if type(layer) is Convolution2D][-1]
+        for layer in self.model.layers[:last_conv_idx+1]:
             layer.trainable = False
         self.model.add(Dense(num_outputs, activation="softmax"))
 
