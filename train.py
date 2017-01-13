@@ -8,17 +8,30 @@ dropout = 0.1
 
 lr = 0.001
 decay = 1e-6
-epochs = 10
+epochs = 25
 
-gen = ImageDataGenerator()
+TRAIN_PATH = "data/train"
+VALID_PATH = "data/valid"
+# TRAIN_PATH = "data/sample/train"
+# VALID_PATH = "data/sample/valid"
+
+
+gen = ImageDataGenerator(
+    rotation_range=0,
+    width_shift_range=0.15,
+    height_shift_range=0.15,
+    shear_range=0,
+    zoom_range=0.15,
+    channel_shift_range=6,
+)
 train = gen.flow_from_directory(
-    "data/train",
+    TRAIN_PATH,
     target_size=(img_size, img_size),
     batch_size=batch_size,
     class_mode="categorical",
     shuffle=True)
 valid = gen.flow_from_directory(
-    "data/valid",
+    VALID_PATH,
     target_size=(img_size, img_size),
     batch_size=batch_size,
     class_mode="categorical",
