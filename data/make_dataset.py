@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import pandas as pd
 from shutil import copyfile
@@ -6,7 +7,9 @@ SAMPLE_TRAIN_SIZE = 150
 SAMPLE_VALID_SIZE = 100
 
 driver_img_paths = pd.read_csv("driver_imgs_list.csv")
-valid_drivers = driver_img_paths["subject"].unique()[:3]
+valid_drivers = driver_img_paths["subject"].unique()
+np.random.shuffle(valid_drivers)
+valid_drivers = valid_drivers[:3]
 
 valid_img_paths = driver_img_paths[driver_img_paths["subject"].isin(valid_drivers)]
 valid_img_paths = valid_img_paths["classname"].str.cat(valid_img_paths["img"], sep="/")
