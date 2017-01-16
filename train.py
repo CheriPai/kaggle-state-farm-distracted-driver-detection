@@ -13,6 +13,7 @@ epochs = 5
 
 TRAIN_PATH = "data/train"
 VALID_PATH = "data/valid"
+TEST_PATH = "data/pseudo"
 # TRAIN_PATH = "data/sample/train"
 # VALID_PATH = "data/sample/valid"
 
@@ -38,11 +39,12 @@ valid = gen.flow_from_directory(
     class_mode="categorical",
     shuffle=False)
 pseudo = gen.flow_from_directory(
-    VALID_PATH,
+    TEST_PATH,
     target_size=(img_size, img_size),
     batch_size=batch_size,
+    classes=["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
     class_mode="categorical",
-    shuffle=True)
+    shuffle=False)
 
 vgg = VGG16(dropout)
 vgg.finetune_dense(10)
@@ -54,6 +56,8 @@ vgg.model.compile(
 
 vgg.model.load_weights("data/weights.h5")
 
+pseudo.__dict__["classes"] = np.argmax(vgg.model.predict_generator(pseudo, val_samples=pseudo.nb_sample), axis=-1)
+
 for i in range(epochs):
     vgg.model.fit_generator(
         train,
@@ -61,8 +65,6 @@ for i in range(epochs):
         nb_epoch=1,
         validation_data=valid,
         nb_val_samples=valid.nb_sample)
-
-    pseudo.__dict__["classes"] = np.argmax(vgg.model.predict_generator(valid, val_samples=valid.nb_sample), axis=-1)
 
     vgg.model.fit_generator(
         pseudo,
